@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 export default function BookingPage() {
   const jadwal = [
@@ -19,6 +20,7 @@ export default function BookingPage() {
   const [mingguKe, setMingguKe] = useState(0);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const bookingStudioRef = useRef(null);
+  const nextSearchParams = useSearchParams();
 
   // Slot jam per 1 jam (09.30–23.00)
   const slotJam1Jam = [
@@ -126,6 +128,31 @@ export default function BookingPage() {
   };
   const [showInfo, setShowInfo] = useState(null);
   const [infoVisible, setInfoVisible] = useState(false);
+
+  // Prefill state dari query string jika ada
+  useEffect(() => {
+    if (!nextSearchParams) return;
+    const hari = nextSearchParams.get('hari');
+    const mingguKeQ = nextSearchParams.get('mingguKe');
+    const jamMulaiQ = nextSearchParams.get('jamMulai');
+    const jamAkhirQ = nextSearchParams.get('jamAkhir');
+    const ruanganQ = nextSearchParams.get('ruangan');
+    // Set state hanya jika semua data ada (agar langsung buka form booking, bukan hanya jadwal)
+    if (hari && mingguKeQ && jamMulaiQ && jamAkhirQ && ruanganQ) {
+      setSelectedDay(hari);
+      setMingguKe(Number(mingguKeQ));
+      setIdxMulai(slotJam1Jam.indexOf(jamMulaiQ));
+      setIdxAkhir(slotJam1Jam.indexOf(jamAkhirQ));
+      setSelectedRoom(Number(ruanganQ));
+      setHasOpened(true); // agar langsung buka form booking
+    }
+  }, [nextSearchParams]);
+
+  // Cek login
+  function isLoggedIn() {
+    if (typeof window === 'undefined') return false;
+    return !!localStorage.getItem('token');
+  }
 
   return (
     <div className="fixed inset-0 flex items-center justify-end z-0 pr-[10vw]" style={{minHeight: '100vh'}}>
@@ -369,8 +396,25 @@ export default function BookingPage() {
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-bold text-lg disabled:opacity-40 mt-2"
                     disabled={idxMulai === null || idxAkhir === null || !selectedRoom}
                     type="button"
+                    onClick={() => {
+                      const params = new URLSearchParams({
+                        hari: selectedDay,
+                        mingguKe: mingguKe.toString(),
+                        jamMulai: idxMulai !== null ? slotJam1Jam[idxMulai] : '',
+                        jamAkhir: idxAkhir !== null ? slotJam1Jam[idxAkhir] : '',
+                        totalJam: totalJam.toString(),
+                        ruangan: selectedRoom?.toString() || ''
+                      });
+                      if (!isLoggedIn()) {
+                        // Simpan pesan popup ke sessionStorage
+                        sessionStorage.setItem('popupBooking', 'Silahkan Login dulu sebelum Booking ya :)');
+                        window.location.href = `/login?redirectTo=/booking?${params.toString()}`;
+                        return;
+                      }
+                      window.location.href = `/pembayaran?${params.toString()}`;
+                    }}
                   >
-                    Booking Sekarang
+                    Konfirmasi Pesanan
                   </button>
                 </form>
               </div>

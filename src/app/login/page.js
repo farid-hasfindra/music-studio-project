@@ -1,16 +1,31 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [message, setMessage] = useState('')
+  const [popup, setPopup] = useState('');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    // Cek sessionStorage untuk popup booking
+    if (typeof window !== 'undefined') {
+      const msg = sessionStorage.getItem('popupBooking');
+      if (msg) {
+        setPopup(msg);
+        sessionStorage.removeItem('popupBooking');
+      }
+    }
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault()
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -19,8 +34,16 @@ export default function LoginPage() {
       const data = await res.json()
       if (res.ok) {
         setMessage('Login berhasil!')
-        console.log('Token:', data.token)
-        // TODO: Simpan token di localStorage dan redirect ke dashboard
+        localStorage.setItem('token', data.token)
+        setTimeout(() => {
+          // Cek apakah ada redirectTo di query
+          const redirectTo = searchParams.get('redirectTo');
+          if (redirectTo) {
+            router.push(redirectTo);
+          } else {
+            window.location.href = '/'
+          }
+        }, 800)
       } else {
         setMessage(data.message)
       }
@@ -32,6 +55,11 @@ export default function LoginPage() {
   return (
     <div className="max-w-md mx-auto mt-10">
       <h2 className="text-2xl font-bold mb-4">Login</h2>
+      {popup && (
+        <div className="mb-4 bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-2 rounded text-center">
+          {popup}
+        </div>
+      )}
       <form className="space-y-4" onSubmit={handleLogin}>
         <input className="w-full border p-2" type="email" placeholder="Email"
           value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -40,6 +68,9 @@ export default function LoginPage() {
         <button className="bg-blue-600 text-white px-4 py-2 rounded" type="submit">Login</button>
       </form>
       {message && <p className="mt-4 text-red-500">{message}</p>}
+      <p className="mt-4 text-sm text-gray-600">Belum punya akun?{' '}
+        <a href="/register" className="text-blue-600 hover:underline">Daftar dulu yuk!</a>
+      </p>
     </div>
   )
 }
