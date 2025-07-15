@@ -363,35 +363,43 @@ export default function BookingPage() {
 
                   {/* Komponen Info Ruangan Modal */}
                   {showInfo && (
-                    <div className={`fixed inset-0 z-50 flex items-center justify-center transition-all ${infoVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-                      style={{backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', background: 'rgba(0,0,0,0.35)'}}
-                      onClick={() => { setInfoVisible(false); setTimeout(()=>setShowInfo(null), 350); }}
-                    >
-                      <div
-                        className={`relative bg-gray-900 rounded-xl p-6 w-full max-w-xs shadow-lg border-2 border-blue-400 pointer-events-auto
-                          ${infoVisible ? 'animate-pop-in-cute' : 'animate-pop-out-cute'}`}
-                        style={{minWidth: 300, minHeight: 220}}
-                        onClick={e => e.stopPropagation()}
-                      >
-                        <button
-                          className="absolute top-2 right-2 text-gray-400 hover:text-red-400 text-xl font-bold z-10"
-                          onClick={e => { e.stopPropagation(); setInfoVisible(false); setTimeout(()=>setShowInfo(null), 350); }}
-                          aria-label="Tutup"
-                        >
-                          ×
-                        </button>
-                        <div className="text-lg font-bold text-blue-300 mb-2 text-center">Info Ruang {showInfo}</div>
-                        <div className="font-bold mb-1">Fasilitas:</div>
-                        <ul className="list-disc ml-4 mb-2">
-                          {infoRuangan[showInfo].fasilitas.map(f => <li key={f}>{f}</li>)}
-                        </ul>
-                        <div className="font-bold mb-1">Aturan:</div>
-                        <ul className="list-disc ml-4">
-                          {infoRuangan[showInfo].aturan.map(a => <li key={a}>{a}</li>)}
-                        </ul>
-                      </div>
-                    </div>
-                  )}
+  <div
+    className={`fixed inset-0 z-50 flex items-center justify-center transition-all ${infoVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+    style={{backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', background: 'rgba(0,0,0,0.35)'}}
+    onClick={() => {
+      setInfoVisible(false);
+      setTimeout(() => setShowInfo(null), 350);
+    }}
+  >
+    <div
+      className={`relative bg-gray-900 rounded-xl p-6 w-full max-w-xs shadow-lg border-2 border-blue-400 pointer-events-auto
+        ${infoVisible ? 'animate-pop-in-cute' : 'animate-pop-out-cute'}`}
+      style={{minWidth: 300, minHeight: 220}}
+      onClick={e => e.stopPropagation()}
+    >
+      <button
+        className="absolute top-2 right-2 text-gray-400 hover:text-red-400 text-xl font-bold z-10"
+        onClick={e => {
+          e.stopPropagation();
+          setInfoVisible(false);
+          setTimeout(() => setShowInfo(null), 350);
+        }}
+        aria-label="Tutup"
+      >
+        ×
+      </button>
+      <div className="text-lg font-bold text-blue-300 mb-2 text-center">Info Ruang {showInfo}</div>
+      <div className="font-bold mb-1">Fasilitas:</div>
+      <ul className="list-disc ml-4 mb-2">
+        {infoRuangan[showInfo].fasilitas.map(f => <li key={f}>{f}</li>)}
+      </ul>
+      <div className="font-bold mb-1">Aturan:</div>
+      <ul className="list-disc ml-4">
+        {infoRuangan[showInfo].aturan.map(a => <li key={a}>{a}</li>)}
+      </ul>
+    </div>
+  </div>
+)}
                   <button
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-bold text-lg disabled:opacity-40 mt-2"
                     disabled={idxMulai === null || idxAkhir === null || !selectedRoom}

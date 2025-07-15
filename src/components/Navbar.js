@@ -29,7 +29,7 @@ export default function Navbar() {
     return null
   }
 
-  // Update user dan log ke terminal saat login/logout berpindah
+  // Update user dari token setiap perubahan pathname atau event custom
   useEffect(() => {
     const updateUser = () => {
       const u = getUserFromToken()
@@ -100,6 +100,7 @@ export default function Navbar() {
               onClick={() => setShowProfile(v => !v)}
               aria-label="Profile"
               type="button"
+              style={{ zIndex: 60 }} // pastikan tombol berada di atas
             >
               {user ? (
                 <span className="font-bold text-lg">
@@ -111,11 +112,12 @@ export default function Navbar() {
                 </svg>
               )}
             </button>
-            {/* Dropdown hanya muncul jika sudah login */}
-            {showProfile && user && (
+            {/* Dropdown hanya muncul jika sudah login dan showProfile true */}
+            {user && showProfile && (
               <div
                 ref={dropdownRef}
                 className="absolute right-0 mt-3 w-56 bg-gray-900 text-white rounded shadow-lg p-4 z-50"
+                style={{ zIndex: 100 }}
               >
                 <div className="mb-3">
                   <div className="font-semibold text-base">{user.username}</div>
