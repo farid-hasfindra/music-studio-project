@@ -23,7 +23,7 @@ export async function POST(req) {
       return NextResponse.json({ message: 'Password salah' }, { status: 400 })
     }
     const token = jwt.sign(
-      { username: user.username, email: user.email, id: user._id },
+      { username: user.username, email: user.email, id: user._id, role: user.role },
       JWT_SECRET,
       { expiresIn: '7d' }
     )
