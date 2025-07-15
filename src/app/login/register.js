@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('');
@@ -16,7 +16,7 @@ export default function RegisterPage() {
       return;
     }
     try {
-      const res = await fetch('http://localhost:5000/api/auth/register', {
+      const res = await fetch('/api/auth/register', { // Perbaiki di sini
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, username, password })
