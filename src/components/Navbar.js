@@ -2,71 +2,69 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react'
 
 export default function Navbar() {
-  const pathname = usePathname();
-  const [showProfile, setShowProfile] = useState(false);
-  const [user, setUser] = useState(null);
-  const dropdownRef = useRef(null);
+  const pathname = usePathname()
+  const [showProfile, setShowProfile] = useState(false)
+  const [user, setUser] = useState(null)
+  const dropdownRef = useRef(null)
+  const buttonRef = useRef(null)
 
   // Ambil data user dari token JWT
-  const updateUserFromToken = () => {
+  const getUserFromToken = () => {
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token')
       if (token) {
         try {
-          const payload = JSON.parse(atob(token.split('.')[1]));
+          const payload = JSON.parse(atob(token.split('.')[1]))
           if ((payload.username || payload.name) && payload.email) {
-            setUser({ username: payload.username || payload.name, email: payload.email });
-          } else {
-            setUser(null);
+            return { username: payload.username || payload.name, email: payload.email }
           }
         } catch (e) {
-          setUser(null);
+          return null
         }
-      } else {
-        setUser(null);
       }
     }
-  };
+    return null
+  }
 
+  // Set user setiap kali halaman berubah (supaya update juga saat login/logout)
   useEffect(() => {
-    updateUserFromToken();
-    // Sync antar tab jika login/logout di tab lain
-    const onStorage = () => updateUserFromToken();
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
-  }, [pathname]);
+    setUser(getUserFromToken())
+  }, [pathname])
 
   // Tutup dropdown jika klik di luar
   useEffect(() => {
     function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setShowProfile(false);
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target)
+      ) {
+        setShowProfile(false)
       }
     }
     if (showProfile) {
-      document.addEventListener("mousedown", handleClickOutside);
-    } else {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.addEventListener('mousedown', handleClickOutside)
     }
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [showProfile]);
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showProfile])
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    setUser(null);
-    setShowProfile(false);
-    window.location.href = '/login';
-  };
+    localStorage.removeItem('token')
+    setUser(null)
+    setShowProfile(false)
+    window.location.href = '/login'
+  }
 
   const linkStyle = (path) =>
     pathname === path
       ? 'text-blue-600 font-semibold underline'
-      : 'text-gray-300 hover:text-blue-600 transition';
+      : 'text-gray-300 hover:text-blue-600 transition'
 
   return (
     <nav className="bg-black shadow-none p-4 sticky top-0 z-50">
@@ -79,11 +77,13 @@ export default function Navbar() {
             <Link href="/login" className={linkStyle('/login')}>Login</Link>
           )}
           {/* Tombol Profile */}
-          <div className="relative" ref={dropdownRef}>
+          <div className="relative flex items-center">
             <button
+              ref={buttonRef}
               className="ml-2 rounded-full bg-gray-800 hover:bg-gray-700 p-2 text-white focus:outline-none"
-              onClick={() => setShowProfile((v) => !v)}
+              onClick={() => setShowProfile(v => !v)}
               aria-label="Profile"
+              type="button"
             >
               {user ? (
                 <span className="font-bold text-lg">
@@ -95,9 +95,11 @@ export default function Navbar() {
                 </svg>
               )}
             </button>
-            {/* Dropdown Profile */}
             {showProfile && user && (
-              <div className="absolute right-0 mt-3 w-56 bg-gray-900 text-white rounded shadow-lg p-4 z-50">
+              <div
+                ref={dropdownRef}
+                className="absolute right-0 mt-3 w-56 bg-gray-900 text-white rounded shadow-lg p-4 z-50"
+              >
                 <div className="mb-3">
                   <div className="font-semibold text-base">{user.username}</div>
                   <div className="text-sm text-gray-400">{user.email}</div>
@@ -105,15 +107,15 @@ export default function Navbar() {
                 <button
                   className="w-full text-left px-2 py-1 hover:bg-gray-700 rounded"
                   onClick={handleLogout}
+                  type="button"
                 >
                   Logout
                 </button>
               </div>
             )}
-            {/* Jika belum login, dropdown kosong/tidak muncul */}
           </div>
         </div>
       </div>
     </nav>
-  );
+  )
 }
