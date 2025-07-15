@@ -18,10 +18,12 @@ export default function Navbar() {
       if (token) {
         try {
           const payload = JSON.parse(atob(token.split('.')[1]))
+          console.log('JWT Payload:', payload)
           if ((payload.username || payload.name) && payload.email) {
             return { username: payload.username || payload.name, email: payload.email }
           }
         } catch (e) {
+          console.log('JWT Parse error:', e)
           return null
         }
       }
@@ -29,7 +31,6 @@ export default function Navbar() {
     return null
   }
 
-  // Update user dari token setiap perubahan pathname atau event custom
   useEffect(() => {
     const updateUser = () => {
       const u = getUserFromToken()
@@ -49,7 +50,6 @@ export default function Navbar() {
     }
   }, [pathname])
 
-  // Tutup dropdown jika klik di luar
   useEffect(() => {
     function handleClickOutside(event) {
       if (
@@ -82,6 +82,10 @@ export default function Navbar() {
       ? 'text-blue-600 font-semibold underline'
       : 'text-gray-300 hover:text-blue-600 transition'
 
+  // DEBUG LOGS
+  console.log('user:', user)
+  console.log('showProfile:', showProfile)
+
   return (
     <nav className="bg-black shadow-none p-4 sticky top-0 z-50">
       <div className="max-w-6xl mx-auto flex justify-between items-center">
@@ -97,10 +101,13 @@ export default function Navbar() {
             <button
               ref={buttonRef}
               className="ml-2 rounded-full bg-gray-800 hover:bg-gray-700 p-2 text-white focus:outline-none"
-              onClick={() => setShowProfile(v => !v)}
+              onClick={() => {
+                console.log('Profile button clicked!')
+                setShowProfile(v => !v)
+              }}
               aria-label="Profile"
               type="button"
-              style={{ zIndex: 60 }} // pastikan tombol berada di atas
+              style={{ zIndex: 60 }}
             >
               {user ? (
                 <span className="font-bold text-lg">
@@ -112,7 +119,6 @@ export default function Navbar() {
                 </svg>
               )}
             </button>
-            {/* Dropdown hanya muncul jika sudah login dan showProfile true */}
             {user && showProfile && (
               <div
                 ref={dropdownRef}
