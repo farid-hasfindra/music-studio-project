@@ -96,29 +96,21 @@ export default function Navbar() {
               )}
             </button>
             {/* Dropdown Profile */}
-            {showProfile && (
+            {showProfile && user && (
               <div className="absolute right-0 mt-3 w-56 bg-gray-900 text-white rounded shadow-lg p-4 z-50">
-                {user ? (
-                  <>
-                    <div className="mb-3">
-                      <div className="font-semibold text-base">{user.username}</div>
-                      <div className="text-sm text-gray-400">{user.email}</div>
-                    </div>
-                    <button
-                      className="w-full text-left px-2 py-1 hover:bg-gray-700 rounded"
-                      onClick={handleLogout}
-                    >
-                      Logout
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <Link href="/login" className="block px-2 py-1 hover:bg-gray-700 rounded">Login</Link>
-                    <Link href="/register" className="block px-2 py-1 hover:bg-gray-700 rounded">Register</Link>
-                  </>
-                )}
+                <div className="mb-3">
+                  <div className="font-semibold text-base">{user.username}</div>
+                  <div className="text-sm text-gray-400">{user.email}</div>
+                </div>
+                <button
+                  className="w-full text-left px-2 py-1 hover:bg-gray-700 rounded"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </button>
               </div>
             )}
+            {/* Jika belum login, dropdown kosong/tidak muncul */}
           </div>
         </div>
       </div>
