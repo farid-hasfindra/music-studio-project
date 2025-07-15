@@ -35,6 +35,7 @@ export default function LoginPage() {
       if (res.ok) {
         setMessage('Login berhasil!')
         localStorage.setItem('token', data.token)
+        window.dispatchEvent(new Event('authChanged'))
         setTimeout(() => {
           // Cek apakah ada redirectTo di query
           const redirectTo = searchParams.get('redirectTo');

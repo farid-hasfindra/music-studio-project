@@ -29,9 +29,16 @@ export default function Navbar() {
     return null
   }
 
-  // Set user setiap kali halaman berubah (supaya update juga saat login/logout)
+  // Update user saat halaman berubah, dan saat event authChanged atau storage
   useEffect(() => {
-    setUser(getUserFromToken())
+    const updateUser = () => setUser(getUserFromToken())
+    updateUser()
+    window.addEventListener('storage', updateUser)
+    window.addEventListener('authChanged', updateUser)
+    return () => {
+      window.removeEventListener('storage', updateUser)
+      window.removeEventListener('authChanged', updateUser)
+    }
   }, [pathname])
 
   // Tutup dropdown jika klik di luar
@@ -58,6 +65,7 @@ export default function Navbar() {
     localStorage.removeItem('token')
     setUser(null)
     setShowProfile(false)
+    window.dispatchEvent(new Event('authChanged'))
     window.location.href = '/login'
   }
 
@@ -95,22 +103,28 @@ export default function Navbar() {
                 </svg>
               )}
             </button>
-            {showProfile && user && (
+            {showProfile && (
               <div
                 ref={dropdownRef}
                 className="absolute right-0 mt-3 w-56 bg-gray-900 text-white rounded shadow-lg p-4 z-50"
               >
-                <div className="mb-3">
-                  <div className="font-semibold text-base">{user.username}</div>
-                  <div className="text-sm text-gray-400">{user.email}</div>
-                </div>
-                <button
-                  className="w-full text-left px-2 py-1 hover:bg-gray-700 rounded"
-                  onClick={handleLogout}
-                  type="button"
-                >
-                  Logout
-                </button>
+                {user ? (
+                  <>
+                    <div className="mb-3">
+                      <div className="font-semibold text-base">{user.username}</div>
+                      <div className="text-sm text-gray-400">{user.email}</div>
+                    </div>
+                    <button
+                      className="w-full text-left px-2 py-1 hover:bg-gray-700 rounded"
+                      onClick={handleLogout}
+                      type="button"
+                    >
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <div className="mb-3 text-center text-gray-400">Belum login</div>
+                )}
               </div>
             )}
           </div>
