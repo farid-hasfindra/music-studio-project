@@ -29,9 +29,17 @@ export default function Navbar() {
     return null
   }
 
-  // Update user saat halaman berubah, dan saat event authChanged atau storage
+  // Update user dan log ke terminal saat login/logout berpindah
   useEffect(() => {
-    const updateUser = () => setUser(getUserFromToken())
+    const updateUser = () => {
+      const u = getUserFromToken()
+      setUser(u)
+      if (u) {
+        console.log('[INFO] Sedang login sebagai:', u.username, u.email)
+      } else {
+        console.log('[INFO] Tidak ada user yang sedang login.')
+      }
+    }
     updateUser()
     window.addEventListener('storage', updateUser)
     window.addEventListener('authChanged', updateUser)
@@ -84,7 +92,7 @@ export default function Navbar() {
           {!user && (
             <Link href="/login" className={linkStyle('/login')}>Login</Link>
           )}
-          {/* Tombol Profile */}
+          {/* Tombol Profile selalu ada */}
           <div className="relative flex items-center">
             <button
               ref={buttonRef}
@@ -103,28 +111,23 @@ export default function Navbar() {
                 </svg>
               )}
             </button>
-            {showProfile && (
+            {/* Dropdown hanya muncul jika sudah login */}
+            {showProfile && user && (
               <div
                 ref={dropdownRef}
                 className="absolute right-0 mt-3 w-56 bg-gray-900 text-white rounded shadow-lg p-4 z-50"
               >
-                {user ? (
-                  <>
-                    <div className="mb-3">
-                      <div className="font-semibold text-base">{user.username}</div>
-                      <div className="text-sm text-gray-400">{user.email}</div>
-                    </div>
-                    <button
-                      className="w-full text-left px-2 py-1 hover:bg-gray-700 rounded"
-                      onClick={handleLogout}
-                      type="button"
-                    >
-                      Logout
-                    </button>
-                  </>
-                ) : (
-                  <div className="mb-3 text-center text-gray-400">Belum login</div>
-                )}
+                <div className="mb-3">
+                  <div className="font-semibold text-base">{user.username}</div>
+                  <div className="text-sm text-gray-400">{user.email}</div>
+                </div>
+                <button
+                  className="w-full text-left px-2 py-1 hover:bg-gray-700 rounded"
+                  onClick={handleLogout}
+                  type="button"
+                >
+                  Logout
+                </button>
               </div>
             )}
           </div>
