@@ -37,12 +37,20 @@ export default function LoginPage() {
         localStorage.setItem('token', data.token)
         window.dispatchEvent(new Event('authChanged'))
         setTimeout(() => {
+          // Decode JWT token untuk cek role
+          let role = 'user';
+          try {
+            const payload = JSON.parse(atob(data.token.split('.')[1]))
+            role = payload.role || 'user';
+          } catch (e) {}
           // Cek apakah ada redirectTo di query
           const redirectTo = searchParams.get('redirectTo');
-          if (redirectTo) {
+          if (role === 'admin') {
+            router.push('/admin');
+          } else if (redirectTo) {
             router.push(redirectTo);
           } else {
-            window.location.href = '/'
+            window.location.href = '/';
           }
         }, 800)
       } else {
