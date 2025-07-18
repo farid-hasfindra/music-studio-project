@@ -15,30 +15,34 @@ export default function KonfirmasiPembayaran() {
   const [waktuSisa, setWaktuSisa] = useState(0);
 
   useEffect(() => {
-    // Ambil pesanan terakhir dari localStorage
-    const lastOrder = localStorage.getItem("lastOrder");
-    if (lastOrder) {
-      const order = JSON.parse(lastOrder);
-      setPesanan(order);
-      // Hitung waktu sisa (3 jam)
-      const now = Date.now();
-      const expire = order.expireAt || (now + 3 * 60 * 60 * 1000);
-      setWaktuSisa(Math.max(0, Math.floor((expire - now) / 1000)));
-      // Timer countdown
-      const timer = setInterval(() => {
-        const now2 = Date.now();
-        const sisa = Math.max(0, Math.floor((expire - now2) / 1000));
-        setWaktuSisa(sisa);
-        if (sisa <= 0) clearInterval(timer);
-      }, 1000);
-      return () => clearInterval(timer);
+    if (typeof window !== "undefined") {
+      // Ambil pesanan terakhir dari localStorage
+      const lastOrder = window.localStorage.getItem("lastOrder");
+      if (lastOrder) {
+        const order = JSON.parse(lastOrder);
+        setPesanan(order);
+        // Hitung waktu sisa (3 jam)
+        const now = Date.now();
+        const expire = order.expireAt || (now + 3 * 60 * 60 * 1000);
+        setWaktuSisa(Math.max(0, Math.floor((expire - now) / 1000)));
+        // Timer countdown
+        const timer = setInterval(() => {
+          const now2 = Date.now();
+          const sisa = Math.max(0, Math.floor((expire - now2) / 1000));
+          setWaktuSisa(sisa);
+          if (sisa <= 0) clearInterval(timer);
+        }, 1000);
+        return () => clearInterval(timer);
+      }
     }
   }, []);
 
   // Copy nomor rekening
   const handleCopy = (nomor) => {
-    navigator.clipboard.writeText(nomor);
-    alert("Nomor rekening berhasil disalin!");
+    if (typeof window !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(nomor);
+      alert("Nomor rekening berhasil disalin!");
+    }
   };
 
   if (!pesanan) return <div className="text-center p-8">Pesanan tidak ditemukan.</div>;

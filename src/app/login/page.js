@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function LoginPage() {
+function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [message, setMessage] = useState('')
@@ -12,7 +12,6 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    // Cek sessionStorage untuk popup booking
     if (typeof window !== 'undefined') {
       const msg = sessionStorage.getItem('popupBooking');
       if (msg) {
@@ -37,13 +36,11 @@ export default function LoginPage() {
         localStorage.setItem('token', data.token)
         window.dispatchEvent(new Event('authChanged'))
         setTimeout(() => {
-          // Decode JWT token untuk cek role
           let role = 'user';
           try {
             const payload = JSON.parse(atob(data.token.split('.')[1]))
             role = payload.role || 'user';
           } catch (e) {}
-          // Cek apakah ada redirectTo di query
           const redirectTo = searchParams.get('redirectTo');
           if (role === 'admin') {
             router.push('/admin');
@@ -82,4 +79,12 @@ export default function LoginPage() {
       </p>
     </div>
   )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginForm />
+    </Suspense>
+  );
 }
