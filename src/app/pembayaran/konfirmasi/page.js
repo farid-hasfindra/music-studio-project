@@ -8,7 +8,10 @@ const rekening = [
   { bank: "Mandiri", nomor: "9876543210", nama: "Resty Music Studio" },
 ];
 
-export default function KonfirmasiPembayaran() {
+
+import { Suspense } from "react";
+
+function KonfirmasiPembayaranClient() {
   const params = useSearchParams();
   const router = useRouter();
   const [pesanan, setPesanan] = useState(null);
@@ -89,5 +92,13 @@ export default function KonfirmasiPembayaran() {
         <button onClick={() => router.push('/')} className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-bold text-lg mt-2">Kembali ke Beranda</button>
       </div>
     </div>
+  );
+}
+
+export default function KonfirmasiPembayaran() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <KonfirmasiPembayaranClient />
+    </Suspense>
   );
 }
