@@ -1,7 +1,8 @@
-'use client';
+"use client";
 
 import { useSearchParams } from 'next/navigation';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
+import { useRouter } from "next/navigation";
 
 export default function PembayaranPage() {
   const params = useSearchParams();
@@ -15,9 +16,51 @@ export default function PembayaranPage() {
     ruangan: params.get('ruangan') || '',
   }), [params]);
 
+  // Ambil username dari JWT (localStorage)
+  const [username, setUsername] = useState('');
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          setUsername(payload.username || payload.name || (payload.email ? payload.email.split('@')[0] : ''));
+        } catch {}
+      }
+    }
+  }, []);
+
   // Simulasi harga per jam
   const hargaPerJam = 50000;
   const totalHarga = (parseInt(dataBooking.totalJam) || 0) * hargaPerJam;
+
+  const router = useRouter();
+
+  // Konfirmasi pembayaran: simpan pesanan ke localStorage dan redirect
+  const handleKonfirmasi = () => {
+    const pesanan = {
+      username,
+      hari: dataBooking.hari,
+      mingguKe: parseInt(dataBooking.mingguKe)+1,
+      jamMulai: dataBooking.jamMulai,
+      jamAkhir: dataBooking.jamAkhir,
+      totalJam: dataBooking.totalJam,
+      ruangan: dataBooking.ruangan,
+      totalHarga,
+      status: 'pending',
+      createdAt: Date.now(),
+      expireAt: Date.now() + 3*60*60*1000,
+    };
+    localStorage.setItem('lastOrder', JSON.stringify(pesanan));
+    // Simpan ke array allOrders
+    let allOrders = [];
+    try {
+      allOrders = JSON.parse(localStorage.getItem('allOrders')) || [];
+    } catch {}
+    allOrders.push(pesanan);
+    localStorage.setItem('allOrders', JSON.stringify(allOrders));
+    router.push('/pembayaran/konfirmasi');
+  };
 
   return (
     <div className="min-h-screen bg-black text-white relative">
@@ -38,6 +81,7 @@ export default function PembayaranPage() {
           <div className="mb-4">
             <div className="font-semibold mb-2">Detail Pesanan:</div>
             <ul className="text-sm space-y-1">
+              <li>Username: <span className="font-bold">{username}</span></li>
               <li>Hari: <span className="font-bold">{dataBooking.hari}</span></li>
               <li>Minggu ke: <span className="font-bold">{parseInt(dataBooking.mingguKe)+1}</span></li>
               <li>Jam Mulai: <span className="font-bold">{dataBooking.jamMulai}</span></li>
@@ -47,22 +91,21 @@ export default function PembayaranPage() {
             </ul>
           </div>
           <div className="mb-4">
-            <div className="font-semibold mb-2">Pilih Metode Pembayaran:</div>
-            <select className="w-full p-2 rounded bg-gray-800 text-white border border-gray-700">
-              <option>Transfer Bank</option>
-              <option>QRIS</option>
-              <option>OVO</option>
-              <option>DANA</option>
-              <option>Gopay</option>
-              <option>Tunai di Tempat</option>
-            </select>
+            <div className="font-semibold mb-2">Metode Pembayaran:</div>
+            <div className="bg-gray-800 rounded p-3 mb-2">
+              <div className="font-bold text-blue-300 mb-1">Transfer Bank</div>
+            </div>
+            <div className="text-xs text-gray-400 mt-1">Nomor rekening akan ditampilkan setelah konfirmasi pembayaran.</div>
           </div>
           <div className="mb-6 text-lg font-bold text-right">
             Total Biaya: <span className="text-blue-400">Rp {totalHarga.toLocaleString('id-ID')}</span>
           </div>
-          <button className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-bold text-lg">Konfirmasi Pembelian</button>
+          <button className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-bold text-lg" onClick={handleKonfirmasi}>
+            Konfirmasi Pembayaran
+          </button>
         </div>
       </div>
     </div>
   );
 }
+

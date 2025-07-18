@@ -41,21 +41,50 @@ export default function BookingPage() {
     // Tambahkan data simulasi lain jika perlu
   ];
 
-  // Dapatkan slot yang sudah dibooking (per jam) untuk hari & mingguKe terpilih
-  const getSlotBooked = (hari, mingguKe) => {
-    return bookings
+  // Dapatkan slot yang sudah dibooking (per jam) untuk hari & mingguKe & ruangan terpilih
+  const getSlotBooked = (hari, mingguKe, ruangan) => {
+    // Ambil dari localStorage allOrders (pending/berhasil, belum expired)
+    let allOrders = [];
+    if (typeof window !== 'undefined') {
+      try {
+        allOrders = JSON.parse(localStorage.getItem('allOrders')) || [];
+      } catch {}
+    }
+    const now = Date.now();
+    // bookings dummy lama (jika masih ingin dipakai)
+    let bookedIdx = bookings
       .filter(b => b.hari === hari && b.mingguKe === mingguKe)
       .map(b => b.slot)
       .flatMap(slot => {
-        // slot: '09:30 - 11:30' => ['09:30', '10:30', '11:30']
-        // Untuk 1 jam, kita mapping ke jam awal hingga sebelum jam akhir
         const [start, end] = slot.split(' - ');
         const startIdx = slotJam1Jam.findIndex(j => j === start.slice(0,5));
         const endIdx = slotJam1Jam.findIndex(j => j === end.slice(0,5));
         if (startIdx === -1 || endIdx === -1) return [];
-        // Booking slot jam: [startIdx, endIdx)
         return Array.from({length: endIdx - startIdx}, (_, i) => startIdx + i);
       });
+    // Tambahkan slot yang dibooking user lain (pending/berhasil, belum expired)
+    allOrders.forEach(o => {
+      // Pastikan mingguKe dan ruangan bertipe number
+      const orderMingguKe = typeof o.mingguKe === 'string' ? parseInt(o.mingguKe) : o.mingguKe;
+      const orderRuangan = typeof o.ruangan === 'string' ? parseInt(o.ruangan) : o.ruangan;
+      if (
+        o.hari === hari &&
+        orderMingguKe === mingguKe + 1 && // mingguKe di order 1-based, di state 0-based
+        orderRuangan === Number(ruangan) &&
+        (o.status === 'pending' ? (o.expireAt && now < o.expireAt) : o.status === 'berhasil')
+      ) {
+        // Mark semua slot jam yang dibooking
+        const idxStart = slotJam1Jam.indexOf(o.jamMulai);
+        const idxEnd = slotJam1Jam.indexOf(o.jamAkhir);
+        if (idxStart !== -1 && idxEnd !== -1) {
+          for (let i = idxStart; i < idxEnd; i++) {
+            bookedIdx.push(i);
+          }
+        }
+      }
+    });
+    // Unikkan index
+    return [...new Set(bookedIdx)];
   };
 
   // Reset jam jika ganti hari/minggu
@@ -264,7 +293,7 @@ export default function BookingPage() {
                 <form className="space-y-4">
                   <div className="flex flex-wrap gap-2">
                     {slotJam1Jam.map((jam, idx) => {
-                      const bookedIdx = getSlotBooked(selectedDay, mingguKe);
+                      const bookedIdx = getSlotBooked(selectedDay, mingguKe, selectedRoom);
                       const isBooked = bookedIdx.includes(idx);
                       const isSelected = idxMulai !== null && idxAkhir === null && idx === idxMulai;
                       const isInRange = idxMulai !== null && idxAkhir !== null && idx >= idxMulai && idx <= idxAkhir;
@@ -288,31 +317,25 @@ export default function BookingPage() {
                           `}
                           onClick={() => {
                             setJamError(null);
-                            // Jika klik ulang pada jam yang sama (mulai/akhir), reset
                             if ((idxMulai === idx && idxAkhir === null) || (idxAkhir === idx)) {
                               setIdxMulai(null); setIdxAkhir(null); return;
                             }
-                            // Pilih jam mulai
                             if (idxMulai === null) {
                               if (isBooked) return;
                               setIdxMulai(idx); setIdxAkhir(null);
                             } else if (idxAkhir === null) {
-                              // Pilih jam akhir
                               if (idx <= idxMulai) {
                                 setJamError(idx); setTimeout(()=>setJamError(null), 1000); return;
                               }
-                              // Cek jika ada slot booked di tengah range
-                              const bookedIdx = getSlotBooked(selectedDay, mingguKe);
+                              const bookedIdx = getSlotBooked(selectedDay, mingguKe, selectedRoom);
                               const adaBooked = bookedIdx.some(i => i > idxMulai && i <= idx);
                               if (adaBooked) {
-                                // Highlight slot yang booked di tengah
                                 setJamError(bookedIdx.find(i => i > idxMulai && i <= idx));
                                 setTimeout(()=>setJamError(null), 1000);
                                 return;
                               }
                               setIdxAkhir(idx);
                             } else {
-                              // Sudah pilih range, klik apapun reset
                               setIdxMulai(null); setIdxAkhir(null);
                             }
                           }}

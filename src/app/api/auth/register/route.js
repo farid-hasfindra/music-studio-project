@@ -19,6 +19,7 @@ export async function POST(req) {
     const user = await User.create({ username, email, password: hashed })
     return NextResponse.json({ message: 'Registrasi berhasil!' }, { status: 201 })
   } catch (err) {
+    console.error('REGISTER ERROR:', err)
     return NextResponse.json({ message: 'Terjadi kesalahan server' }, { status: 500 })
   }
 }

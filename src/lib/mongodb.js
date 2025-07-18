@@ -14,7 +14,15 @@ export async function connectDB() {
     cached.promise = mongoose.connect(MONGODB_URI, {
       dbName: 'bookingstudio',
       bufferCommands: false,
-    }).then((mongoose) => mongoose)
+    })
+      .then((mongooseInstance) => {
+        console.log('Connected to MongoDB Atlas')
+        return mongooseInstance
+      })
+      .catch((err) => {
+        console.error('MongoDB connection error:', err)
+        throw err
+      })
   }
   cached.conn = await cached.promise
   return cached.conn
