@@ -184,8 +184,117 @@ function BookingClient() {
 
 
   return (
-    <div className="fixed inset-0 flex items-center justify-end z-0 pr-[10vw]" style={{minHeight: '100vh'}}>
-      {/* ...existing code... */}
+    <div className="flex flex-row items-center justify-center min-h-screen bg-black px-4 md:px-0">
+      {/* Kiri: Jadwal Booking */}
+      <div className="bg-gray-900 rounded-xl p-8 shadow-lg w-full max-w-sm mr-8">
+        <h2 className="text-xl font-bold mb-4 text-blue-400 text-center">Jadwal Booking</h2>
+        <div className="flex justify-between items-center mb-4">
+          <span className="font-semibold">Minggu ke-{mingguKe + 1}</span>
+          <div className="relative">
+            <button className="bg-gray-800 text-white px-2 py-1 rounded" onClick={() => setMingguKe(m => Math.max(0, m - 1))} disabled={mingguKe === 0}>&lt;</button>
+            <button className="bg-gray-800 text-white px-2 py-1 rounded ml-2" onClick={() => setMingguKe(m => m + 1)}>&gt;</button>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-2 mb-2">
+          {jadwal.map((j, idx) => {
+            const tgl = getTanggalMinggu(mingguKe)[idx];
+            const isSelected = selectedDay === j.hari;
+            const isDisabled = j.tutup || (tgl && tgl < new Date(new Date().setHours(0,0,0,0)));
+            return (
+              <button
+                key={j.hari}
+                className={`rounded-lg px-3 py-2 text-sm font-bold transition-all ${isSelected ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-300'} ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-800'}`}
+                onClick={() => handleDayClick(j.hari, isDisabled)}
+                disabled={isDisabled}
+              >
+                <div>{j.hari}</div>
+                <div className="text-xs font-normal">{j.jam}</div>
+                <div className="text-xs font-normal">{tgl ? tgl.toLocaleDateString('id-ID') : ''}</div>
+                {isDisabled && <div className="text-xs text-gray-500">{j.tutup ? 'Tutup' : 'Sudah Lewat'}</div>}
+              </button>
+            );
+          })}
+        </div>
+        <div className="text-xs text-gray-400 mt-2 text-center">Klik hari untuk booking studio</div>
+      </div>
+
+      {/* Kanan: Booking Studio */}
+      <div className="bg-gray-900 rounded-xl p-8 shadow-lg w-full max-w-md">
+        <h2 className="text-xl font-bold mb-4 text-blue-400 text-center">Booking Studio{selectedDay ? ` - ${selectedDay}` : ''}</h2>
+        {/* Slot jam */}
+        <div className="grid grid-cols-4 gap-2 mb-4">
+          {slotJam1Jam.map((jam, idx) => {
+            const booked = selectedDay && selectedRoom !== null ? getSlotBooked(selectedDay, mingguKe, selectedRoom)?.includes(idx) : false;
+            const isSelected = idxMulai !== null && idxAkhir !== null && idx >= idxMulai && idx < idxAkhir;
+            return (
+              <button
+                key={jam}
+                className={`rounded px-2 py-1 text-xs font-bold transition-all border ${isSelected ? 'bg-blue-600 text-white border-blue-400' : booked ? 'bg-gray-700 text-gray-500 border-gray-700 cursor-not-allowed' : 'bg-gray-800 text-gray-200 border-gray-700 hover:bg-blue-800'} ${booked ? 'opacity-50' : ''}`}
+                disabled={booked || !selectedDay || selectedRoom === null}
+                onClick={() => {
+                  if (idxMulai === null || idx < idxMulai || idxAkhir !== null) {
+                    setIdxMulai(idx);
+                    setIdxAkhir(null);
+                  } else if (idx > idxMulai) {
+                    setIdxAkhir(idx);
+                  }
+                }}
+              >{jam}</button>
+            );
+          })}
+        </div>
+        <div className="mb-4 text-sm">Total durasi booking: <span className="font-bold">{totalJam}</span> jam</div>
+        {/* Pilih Ruangan */}
+        <div className="mb-4">
+          <div className="font-semibold mb-2">Pilih Ruangan:</div>
+          <div className="flex gap-4">
+            {[1,2].map(r => (
+              <div key={r} className={`flex flex-col items-center border rounded-lg px-3 py-2 ${selectedRoom === r ? 'border-blue-400 bg-blue-900/30' : 'border-gray-700 bg-gray-800'}`}>
+                <button
+                  className={`font-bold mb-1 ${selectedRoom === r ? 'text-blue-400' : 'text-white'}`}
+                  onClick={() => setSelectedRoom(r)}
+                >Ruang {r}</button>
+                <button className="text-xs bg-gray-700 text-gray-300 rounded px-2 py-1 mt-1" onClick={() => {setShowInfo(r);setInfoVisible(true);}}>Info</button>
+              </div>
+            ))}
+          </div>
+        </div>
+        {/* Modal info ruangan */}
+        {infoVisible && showInfo && (
+          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+            <div className="bg-gray-900 rounded-xl p-6 shadow-lg max-w-xs w-full relative">
+              <button className="absolute top-2 right-2 text-gray-400 hover:text-white" onClick={()=>setInfoVisible(false)}>&times;</button>
+              <h3 className="text-lg font-bold mb-2 text-blue-400">Fasilitas Ruang {showInfo}</h3>
+              <ul className="mb-2 text-sm list-disc pl-5">
+                {infoRuangan[showInfo].fasilitas.map(f => <li key={f}>{f}</li>)}
+              </ul>
+              <div className="font-semibold mb-1">Aturan:</div>
+              <ul className="text-xs list-disc pl-5 text-gray-300">
+                {infoRuangan[showInfo].aturan.map(a => <li key={a}>{a}</li>)}
+              </ul>
+            </div>
+          </div>
+        )}
+        {/* Konfirmasi */}
+        <button
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-bold text-lg mt-4 disabled:opacity-50"
+          disabled={!(selectedDay && idxMulai !== null && idxAkhir !== null && idxAkhir > idxMulai && selectedRoom !== null)}
+          onClick={() => {
+            // Redirect ke pembayaran dengan query string
+            const params = new URLSearchParams({
+              hari: selectedDay,
+              mingguKe: mingguKe.toString(),
+              jamMulai: slotJam1Jam[idxMulai],
+              jamAkhir: slotJam1Jam[idxAkhir],
+              totalJam: totalJam.toString(),
+              ruangan: selectedRoom.toString(),
+            });
+            window.location.href = `/pembayaran?${params.toString()}`;
+          }}
+        >
+          Konfirmasi Pesanan
+        </button>
+      </div>
     </div>
   );
 }
