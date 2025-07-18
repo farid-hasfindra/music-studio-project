@@ -1,12 +1,8 @@
-"use client";
 
-import { useSearchParams } from 'next/navigation';
-import { useMemo, useState, useEffect } from 'react';
-import { useRouter } from "next/navigation";
+import { Suspense } from 'react';
 
-export default function PembayaranPage() {
+function PembayaranClient() {
   const params = useSearchParams();
-  // Ambil data booking dari query string
   const dataBooking = useMemo(() => ({
     hari: params.get('hari') || '',
     mingguKe: params.get('mingguKe') || '',
@@ -16,7 +12,6 @@ export default function PembayaranPage() {
     ruangan: params.get('ruangan') || '',
   }), [params]);
 
-  // Ambil username dari JWT (localStorage)
   const [username, setUsername] = useState('');
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -30,13 +25,11 @@ export default function PembayaranPage() {
     }
   }, []);
 
-  // Simulasi harga per jam
   const hargaPerJam = 50000;
   const totalHarga = (parseInt(dataBooking.totalJam) || 0) * hargaPerJam;
 
   const router = useRouter();
 
-  // Konfirmasi pembayaran: simpan pesanan ke localStorage dan redirect
   const handleKonfirmasi = () => {
     const pesanan = {
       username,
@@ -52,7 +45,6 @@ export default function PembayaranPage() {
       expireAt: Date.now() + 3*60*60*1000,
     };
     localStorage.setItem('lastOrder', JSON.stringify(pesanan));
-    // Simpan ke array allOrders
     let allOrders = [];
     try {
       allOrders = JSON.parse(localStorage.getItem('allOrders')) || [];
@@ -64,7 +56,6 @@ export default function PembayaranPage() {
 
   return (
     <div className="min-h-screen bg-black text-white relative">
-      {/* Tombol kembali di kiri atas, di luar komponen pembayaran */}
       <button
         className="absolute top-6 left-6 bg-gray-800 hover:bg-gray-700 text-white rounded-full p-2 shadow-md border border-gray-700 z-20 flex items-center justify-center"
         style={{ width: 40, height: 40 }}
@@ -106,6 +97,14 @@ export default function PembayaranPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PembayaranPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PembayaranClient />
+    </Suspense>
   );
 }
 
